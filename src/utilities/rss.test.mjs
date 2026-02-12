@@ -28,7 +28,7 @@ describe("generateRssFeed", () => {
   it("should include correct post data in the feed", () => {
     const xml = generateRssFeed(mockPosts);
 
-    expect(xml).toContain("<title>Test Webpack Post</title>");
+    expect(xml).toContain("<![CDATA[Test Webpack Post]]>");
     expect(xml).toContain("https://webpack.js.org/blog/test-post");
     expect(xml).toContain("This is a test excerpt for RSS feed");
   });
