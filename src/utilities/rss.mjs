@@ -2,9 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { Feed } from "feed";
 
-/**
- * Parse frontmatter from MDX file
- */
+// Parse frontmatter from MDX file
 function parseMarkdownFile(filePath) {
   const content = fs.readFileSync(filePath, "utf8");
   const frontmatterMatch = content.match(/^---\n([\s\S]*?)\n---/);
@@ -55,9 +53,10 @@ export const generateRssFeed = (posts = null) => {
     return feed.rss2();
   }
 
-  // Otherwise, read from file system
+  // Otherwise, read from file system (it operates Windows, Mac, and Linux)
   const blogDir = path.join(process.cwd(), "src", "content", "blog");
 
+  // Check if directory exists
   if (!fs.existsSync(blogDir)) {
     throw new Error(`Blog directory not found: ${blogDir}`);
   }
@@ -65,15 +64,18 @@ export const generateRssFeed = (posts = null) => {
   const files = fs.readdirSync(blogDir);
 
   const blogPosts = files
+    // Select only .mdx files, exclude index.mdx
     .filter(
       (file) =>
         // Exclude index.mdx, only .mdx files
         file.endsWith(".mdx") && file !== "index.mdx",
     )
     .map((file) => {
+      // Generate full file path
       const filePath = path.join(blogDir, file);
-      const postData = parseMarkdownFile(filePath);
+      const postData = parseMarkdownFile(filePath); // Parse MDX file
 
+      // Return null if parsing fails
       if (!postData || !postData.title) return null;
 
       // Try to extract date from filename (YYYY-MM-DD format)
@@ -81,26 +83,31 @@ export const generateRssFeed = (posts = null) => {
       let date;
 
       if (dateMatch) {
-        // If filename contains date
+        // Use date if present
         [, date] = dateMatch;
       } else {
-        // If no date in filename, use file modification time
+        // Use file modification time if no date in filename
         const stats = fs.statSync(filePath);
         [date] = stats.mtime.toISOString().split("T");
       }
 
+      // Generate URL slug
       const slug = file.replace(".mdx", "");
 
+      // Return post object
       return {
         title: postData.title,
         url: `/blog/${slug}/`,
         date,
       };
     })
+    // Remove null values
     .filter(Boolean)
-    // Sort by date in descending order (newest first)
+
+    // Sort in reverse chronological order (newest first)
     .toSorted((a, b) => new Date(b.date) - new Date(a.date));
 
+  // Add each post to feed
   for (const post of blogPosts) {
     feed.addItem({
       title: post.title,
@@ -111,18 +118,29 @@ export const generateRssFeed = (posts = null) => {
     });
   }
 
+  // Generate and return RSS XML
   return feed.rss2();
 };
 
 // When executed directly as a script
 if (process.argv[1] && process.argv[1].includes("rss.mjs")) {
   try {
+    // Generate RSS reading from file system
     const xml = generateRssFeed();
+
+    // Count generated posts
     const posts = xml.match(/<item>/g)?.length || 0;
-    fs.writeFileSync(path.join(process.cwd(), "rss.xml"), xml);
-    console.log(`✅ RSS Feed generated successfully with ${posts} posts!`);
+
+    // Generate in src/assets/ (it will be copied to dist/ during build)
+    const outputPath = path.join(process.cwd(), "src", "assets", "rss.xml");
+    // Create rss.xml file in current directory
+    fs.writeFileSync(outputPath, xml);
+
+    // Output success message
+    console.log(`Generated RSS feed with ${posts} posts`);
   } catch (err) {
-    console.error("❌ Error generating feed:", err.message);
+    // Error handling
+    console.error("Error generating feed:", err.message);
     console.error(err.stack);
     throw err;
   }
