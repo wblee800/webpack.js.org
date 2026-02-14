@@ -34,6 +34,7 @@
     "fetch:supporters": "node src/utilities/fetch-supporters.mjs",
     "fetch:governance": "node src/utilities/fetch-governance.mjs",
     "fetch-all": "run-s fetch-repos fetch",
+    "build:rss": "node src/scripts/rss.mjs",
     "prebuild": "npm run clean",
     "build": "run-s fetch-repos fetch:governance fetch content && webpack --config webpack.prod.mjs --config-node-env production && run-s printable content && webpack --config webpack.ssg.mjs --config-node-env production --env ssg",
     "postbuild": "npm run sitemap",
@@ -74,6 +75,7 @@
   "dependencies": {
     "@docsearch/react": "^3.9.0",
     "@react-spring/web": "^10.0.3",
+    "feed": "^5.2.0",
     "path-browserify": "^1.0.1",
     "prop-types": "^15.8.1",
     "react": "^17.0.2",

@@ -123,6 +123,10 @@ export default (env) =>
             from: "./assets/robots.txt",
             to: "./",
           },
+          {
+            from: "./assets/rss.xml",
+            to: "./",
+          },
           "CNAME",
         ],
       }),
